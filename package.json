@@ -1,0 +1,19 @@
+{
+  "name": "daily-persona",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic daily persona data protocol with HTTP and MCP adapters",
+  "scripts": {
+    "test": "node --test",
+    "http": "node src/http-server.js",
+    "mcp": "node src/mcp-stdio.js",
+    "cli": "node src/cli.js",
+    "check": "node src/cli.js check",
+    "today": "node src/cli.js today"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

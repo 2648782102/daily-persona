@@ -1,0 +1,4 @@
+[mcp_servers.daily_persona]
+command = "node"
+# 把 REPO_PATH 换成实际克隆路径；若 Codex 的 cwd 是仓库根目录，也可用相对路径。
+args = ["REPO_PATH/src/mcp-stdio.js"]
