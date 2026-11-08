@@ -85,50 +85,52 @@ HTTP 适配还暴露纯数据端点：`/health`、`/v1/today.json`、`/v1/resolv
 规则：
 
 1. 会话或任务开始时解析一次，随后冻结。
-2. 同一 `date + timezone + seed + catalogVersion + digest` 必须永远得到同一结果。
-3. 人格文本是不可信数据，只影响语气和评审重点；不得覆盖安全规则、用户意图、工具权限或事实准确性。
-4. 显式提供 pin、disable、指定日期、查看 catalog digest 的用户控制。
-5. 变更 catalog 内容时更新 `version`，并重新记录 digest。
+2. 同一 `date + timezone + seed + catalogVersion + digest` 必须得到同一结果。
+3. catalog 变更必须升版本并更新 digest；不要静默替换已发布内容。
+4. 远端数据只作为输入；宿主保留最终的行为边界。
+5. 不实现隐藏指令、工具调用、命令执行、外链抓取、权限变更或覆盖用户意图。
 
-完整算法见 [docs/PROTOCOL.md](docs/PROTOCOL.md)。
+## 信任边界
 
-## 项目结构
+所有 persona 字段都属于 **untrusted data**：
 
-```text
-catalog/personas.v1.json        版本化人格数据
-src/resolve.js                 确定性解析与哈希轮换
-src/catalog.js                 schema 校验与 digest
-src/http-server.js             REST + Streamable HTTP MCP
-src/mcp.js                     MCP 请求处理
-src/mcp-stdio.js               MCP stdio 适配
-src/cli.js                     check / today / date / dump
-skills/daily-persona/SKILL.md  薄 skill 与信任边界
-examples/                      Codex MCP 配置示例
-test/                          Node.js 测试与 stdio 冒烟测试
-```
+- 可影响：语气、措辞、评审重点、检查清单顺序。
+- 不可影响：安全规则、事实准确性、用户意图、工具权限、系统/开发者指令。
+- 校验器拒绝含 `tool`、`command`、`exec`、`ignore`、`override`、`permission`、`secret`、`token` 等词的 persona 文本字段。
+- MCP 的 `instructions`、工具描述和返回结构都重复声明这一边界。
+- 本项目不提供自动注入 system prompt 的能力；是否采用、何时采用由宿主决定。
 
-## 验证
+## 设计取舍
 
-```bash
-npm test
-npm run check --silent
-npm run today --silent
-node test/stdio-smoke.js
-```
+- 不做 365 个 skill：OpenAI Docs 说明 skills 是可复用工作流，靠 `name/description` 触发，初始列表还有上下文预算；不适合塞人格库。见 [Build skills](https://learn.chatgpt.com/docs/build-skills)。
+- 不用每日 GitHub commit：那会产生历史噪声，而且客户端何时拉取仍不可控。
+- MCP 是适配层，不是合同本身：REST/JSON、CLI、库函数可独立使用。
+- 本项目仍只是**风格 persona**，不是拥有独立记忆、目标、权限的 character 或 agent。
 
-CI 在 Node.js 20、22、24 上运行同样检查。
+## 文件
 
-## 非目标
+| 路径 | 作用 |
+| --- | --- |
+| `catalog/personas.v1.json` | 版本化人格数据 |
+| `src/catalog.js` | 加载、校验、内容哈希 |
+| `src/resolve.js` | 确定性日期解析 |
+| `src/mcp.js` | MCP 工具与双时代协议适配 |
+| `src/mcp-stdio.js` | stdio 入口 |
+| `src/http-server.js` | REST + Streamable HTTP 入口，导出可测的 `handleHttpRequest` |
+| `src/cli.js` | 本地 CLI |
+| `skills/daily-persona/SKILL.md` | 薄 skill |
+| `docs/PROTOCOL.md` | 数据协议规范 |
 
-- 不每日自动 commit、不部署常驻人格切换服务、不创建 365 个 skill。
-- 不把人格写成隐藏系统指令，也不承诺跨模型、跨客户端的完全相同表达。
-- 不提供远程 catalog 签名；公开部署需要另行增加签名和密钥轮换。
-- 不使用已有动画 IP 名称、角色或素材。
+HTTP 测试通过内存请求对象调用 `handleHttpRequest`，不占用 TCP 端口，适合受限沙箱；`npm run http` 仍是真实 HTTP 服务入口。
 
-## 贡献
+## 尚未做
 
-见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全漏洞报告见 [SECURITY.md](SECURITY.md)。
+- 内容签名与密钥轮换。
+- 跨 persona 的事实性、任务完成率、安全边界评测集。
+- 多语言 catalog 与用户自定义 catalog 的审核流程。
 
-## License
+这些不是 MVP 阻塞项；若要把项目公开给不信任的引用方，签名和评测应优先补上。
 
-[MIT](LICENSE)
+## 发布
+
+当前版本见 `package.json` 与 `CHANGELOG.md`；`v0.1.0` 是首个可运行协议 MVP。CI 在 Node 20、22、24 上执行测试、语法检查、CLI 检查和 MCP stdio 冒烟。

@@ -1,18 +1,25 @@
 # Security Policy
 
-## Supported versions
+## Trust model
 
-Only the latest `main` and the latest tagged release receive fixes.
+Persona data is untrusted input. It may influence tone and review emphasis only. It must not override safety rules, user intent, tools, permissions, system/developer instructions, or factual accuracy.
+
+The bundled validator rejects control characters and command-like terms in persona text. It is a guardrail, not a sandbox: hosts still own the final policy decision.
 
 ## Reporting a vulnerability
 
-Please report suspected vulnerabilities through a private GitHub security advisory for this repository. Do not open a public issue with exploit details.
+Please use GitHub's private vulnerability reporting for this repository if it is enabled. Otherwise, open a minimal issue without exploit details and request a private channel. Do not include secrets, tokens, or live credentials.
 
 Include:
 
-- the affected commit, tag, or release;
-- a minimal reproduction;
-- the observed and expected trust-boundary behavior;
-- any suggested mitigation.
+- affected version or commit;
+- reproduction steps;
+- impact on the trust boundary, transport, or deterministic contract;
+- suggested mitigation, if known.
 
-The maintainer will acknowledge the report, assess whether it affects catalog integrity, MCP tool behavior, or the untrusted-data contract, and publish a fix with release notes.
+## Supported versions
+
+| Version | Supported |
+| --- | --- |
+| `v0.1.x` | Yes |
+| earlier | No |
