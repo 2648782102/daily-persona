@@ -49,6 +49,8 @@ jobs:
         run: node test/stdio-sdk-smoke.js
       - name: Validate plugin package
         run: npm run package:check --silent
+      - name: Grade local host rubric
+        run: npm run host:rubric --silent
       - name: Validate npm package contents
         run: npm run pack:check --silent
       - name: Check submission readiness

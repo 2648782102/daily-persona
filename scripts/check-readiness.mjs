@@ -8,10 +8,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const plugin = JSON.parse(await readFile(path.join(root, 'plugin', 'plugin.json'), 'utf8'));
 const mcp = JSON.parse(await readFile(path.join(root, 'plugin', 'mcp.json'), 'utf8'));
 const hostReport = JSON.parse(await readFile(path.join(root, 'evals', 'host-report.json'), 'utf8'));
+const hostRubric = JSON.parse(await readFile(path.join(root, 'evals', 'host-rubric.json'), 'utf8'));
 const endpoint = mcp.mcpServers.daily_persona.url;
 const demo = plugin.extensions['com.openai'].review.demo_recording_url;
 const hostChecksPass = hostReport.mode === 'real-codex-exec'
   && hostReport.checks.every((check) => check.status === 'pass');
+const rubricPass = hostRubric.overall_pass === true;
 
 const checks = [
   {
@@ -51,10 +53,15 @@ const checks = [
   },
   {
     id: 'codex-host-trace-evals',
-    status: hostChecksPass ? 'done' : 'blocked',
+    status: hostChecksPass && rubricPass ? 'done' : 'blocked',
     evidence: hostChecksPass
-      ? 'evals/host-report.json records a 5/5 local Codex CLI stdio MCP run with ephemeral -c config'
-      : 'run npm run host:eval -- --run with CODEX_BIN and commit a passing evals/host-report.json',
+      ? 'evals/host-report.json records a 6/6 local Codex CLI stdio MCP run and evals/host-rubric.json records a passing trace rubric'
+      : 'run npm run host:eval -- --run with CODEX_BIN, then npm run host:rubric',
+  },
+  {
+    id: 'deployment-runbook',
+    status: 'done',
+    evidence: 'docs/OPERATIONS.md covers ownership, deployment, external acceptance, monitoring, rollback, evidence binder, and demo script',
   },
   {
     id: 'public-mcp-endpoint',

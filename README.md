@@ -31,6 +31,7 @@ npm run package:check
 npm run readiness
 npm run pack:check
 CODEX_BIN=/absolute/path/to/codex npm run host:eval -- --run
+npm run host:rubric
 ```
 
 也可以作为 npm 包安装后直接运行 CLI、HTTP 或官方 SDK MCP stdio 入口：
@@ -147,7 +148,7 @@ node src/sign-cli.js sign /private/key/dir/private-key.pem "$(cat /private/key/d
 
 `evals/` 提供 15 个确定性回归用例，覆盖触发、安全边界、事实谨慎、任务完成和风格；`npm run evals` 生成 `prompts.csv` 与 `results.json`。它不假装能证明所有模型表现一致；真实宿主应结合 `codex exec --json` trace 与结构化 rubric。见 [`evals/README.md`](evals/README.md)。
 
-`npm run host:eval` 默认是就绪检查；加 `--run` 后使用单命令临时 MCP 配置捕获三个真实 `codex exec --json` trace，并把脱敏摘要写入 `evals/host-report.json`。已记录一次 5/5 通过的本地 Codex CLI stdio 验收，但这不覆盖公共 HTTPS 插件、ChatGPT 安装态或门户 Scan Tools。`npm run rotation:drill` 用临时密钥演练 active/retired 轮换。
+`npm run host:eval` 默认是就绪检查；加 `--run` 后使用单命令临时 MCP 配置捕获四个真实 `codex exec --json` trace，并把脱敏摘要写入 `evals/host-report.json`；`npm run host:rubric` 从报告中派生结构化评分。已记录一次 6/6 通过的本地 Codex CLI stdio 验收，但这不覆盖公共 HTTPS 插件、ChatGPT 安装态或门户 Scan Tools。`npm run rotation:drill` 用临时密钥演练 active/retired 轮换。
 
 ## 设计取舍
 
@@ -176,12 +177,13 @@ node src/sign-cli.js sign /private/key/dir/private-key.pem "$(cat /private/key/d
 | `plugin/` | 便携式插件包、图标和审核用例 |
 | `site/` | GitHub Pages 产品、支持、隐私与条款页面 |
 | `docs/SUBMISSION.md` | 官方上架要求、完成项与外部阻塞项 |
+| `docs/OPERATIONS.md` | 部署、外部验收、监控、回滚和演示录制运行手册 |
 
 HTTP 测试通过内存请求对象调用 `handleHttpRequest`，不占用 TCP 端口，适合受限沙箱；`npm run http` 仍是真实 HTTP 服务入口。
 
 ## 上架候选
 
-`v0.3.0` 增加官方 SDK MCP 服务、显式只读工具注解、域名挑战路由、插件包、5+3 审核用例、已部署的策略页、密钥治理、本地真实宿主 trace 与发布就绪检查。它不是「已上架」声明：真实托管端点、门户工具扫描、视频演示、开发者身份验证、已安装插件的宿主验收、提交审核与发布仍需外部条件和用户确认。逐项清单见 [`docs/SUBMISSION.md`](docs/SUBMISSION.md)。
+`v0.3.0` 增加官方 SDK MCP 服务、显式只读工具注解、域名挑战路由、插件包、5+3 审核用例、已部署的策略页、密钥治理、本地真实宿主 trace/rubric、部署运行手册与发布就绪检查。它不是「已上架」声明：真实托管端点、门户工具扫描、视频演示、开发者身份验证、已安装插件的宿主验收、提交审核与发布仍需外部条件和用户确认。逐项清单见 [`docs/SUBMISSION.md`](docs/SUBMISSION.md) 与 [`docs/OPERATIONS.md`](docs/OPERATIONS.md)。
 
 ## 尚未做
 

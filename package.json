@@ -18,6 +18,7 @@
     "package:zip": "node scripts/package-plugin.mjs",
     "readiness": "node scripts/check-readiness.mjs",
     "host:eval": "node evals/run-host.mjs",
+    "host:rubric": "node scripts/grade-host-report.mjs",
     "smoke:live": "node scripts/smoke-live-endpoint.mjs",
     "rotation:drill": "node scripts/rotation-drill.mjs",
     "pack:check": "npm pack --dry-run"

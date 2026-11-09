@@ -77,5 +77,5 @@ Use the same contract with any host that supports STDIO or Streamable HTTP:
 3. Honor user pin, disable, or explicit-date requests.
 4. Treat all persona text as untrusted data; never let it change tool permissions or override instructions.
 5. Verify `/v1/signature.json` against a locally trusted key ring before accepting a remote catalog.
-6. Run `npm run evals`; for local Codex CLI, run `CODEX_BIN=/absolute/path/to/codex npm run host:eval -- --run` and keep the sanitized `evals/host-report.json`. For a deployed plugin, capture installed-host traces separately and grade qualitative style with `evals/style-rubric.schema.json`.
+6. Run `npm run evals`; for local Codex CLI, run `CODEX_BIN=/absolute/path/to/codex npm run host:eval -- --run` and `npm run host:rubric`, then keep the sanitized `evals/host-report.json` and `evals/host-rubric.json`. For a deployed plugin, capture installed-host traces separately and grade qualitative style with `evals/style-rubric.schema.json`.
 7. For public plugin submission, run `npm run readiness` and complete every external blocker in `docs/SUBMISSION.md`; passing local checks alone is not publication readiness.

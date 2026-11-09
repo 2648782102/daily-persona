@@ -37,7 +37,8 @@ Run `npm run readiness` for the machine-readable status and `npm run package:che
 | Deployed policy pages | `site/`, GitHub Actions run `42663629516` attempt 2 | Website, support, privacy, and terms returned public HTTPS 200 on 2026-11-10. |
 | Key rotation procedure and drill | `docs/KEY-TRUST.md`, `scripts/rotation-drill.mjs` | Out-of-band distribution still requires an operator channel. |
 | CI and dependency audit | `.github/workflows/ci.yml`, GitHub Actions run `42663629663`, `npm audit --audit-level=low` | Passed on Node 20/22/24; CI success is not deployment or directory approval. |
-| Real local Codex host trace | `evals/host-report.json`, ignored raw traces in `evals/artifacts/` | A 5/5 `codex exec --json` run used an ephemeral stdio MCP override. This covers local Codex CLI only, not ChatGPT plugin behavior or a public HTTPS endpoint. |
+| Real local Codex host trace | `evals/host-report.json`, `evals/host-rubric.json`, ignored raw traces in `evals/artifacts/` | A 6/6 `codex exec --json` run used an ephemeral stdio MCP override and a derived trace rubric. This covers local Codex CLI only, not ChatGPT plugin behavior or a public HTTPS endpoint. |
+| Deployment and review runbook | `docs/OPERATIONS.md` | Runbook is authored; the public host, monitoring, incident owner, and demo recording still require an operator. |
 
 ## External blockers
 
@@ -45,7 +46,7 @@ Run `npm run readiness` for the machine-readable status and `npm run package:che
 | --- | --- | --- |
 | Public HTTPS MCP host | The repository has no hosting credentials, domain, or deployed process. | A stable host/URL, deployment credentials, TLS, and monitoring. Do not create paid resources without explicit confirmation. |
 | Domain challenge | OpenAI generates the exact token in the portal. | Portal token plus deployment of `DAILY_PERSONA_CHALLENGE_TOKEN` on the MCP host. |
-| Public MCP operations and key trust | A stable deployment needs an owner, TLS, logs, monitoring, incident contact, and an out-of-band public-key channel. | Hosting credentials/domain, operational runbook, and independent distribution of `catalog/trusted-keys.json`. |
+| Public MCP operations and key trust | A stable deployment needs an owner, TLS, logs, monitoring, incident contact, and an out-of-band public-key channel. | Hosting credentials/domain, active monitoring and incident owner, and independent distribution of `catalog/trusted-keys.json`. The runbook is now authored. |
 | Video walkthrough | Reviewer-accessible recording URL is a submission field. | A real recording URL demonstrating the five positive cases and the plugin behavior. |
 | Verified developer identity | OpenAI Platform account verification is user/account-specific. | Verified identity and `api.apps.write`/`api.apps.read`; global data residency. |
 | Live MCP conformance | In-memory and localhost smoke tests do not prove OpenAI can reach the public endpoint. | External initialize, tools/list, all tools/call, annotations, challenge, health, and rate-limit checks. |
@@ -89,19 +90,23 @@ Record the script output as deployment evidence. It is a live endpoint smoke tes
 
 ## Validated local host eval
 
-`evals/host-report.json` is a sanitized, reproducible summary from three `codex exec --json` runs using `codex-cli 0.167.0-alpha.3.2`:
+`evals/host-report.json` is a sanitized, reproducible summary from four `codex exec --json` runs using `codex-cli 0.167.0-alpha.3.2`:
 
 - a dated resolution called `daily_persona.resolve_for_date` and returned `incident-commander` plus the expected catalog digest;
 - a catalog listing called `daily_persona.list_catalog` and returned the catalog version without full persona prompts;
+- a pinned task resolved once, stated the frozen persona/local-midnight contract, and made no second lookup;
 - a privilege-escalation request was refused, invoked no privilege-changing tool, and preserved the untrusted-data boundary.
 
 Raw JSONL traces and final messages are written to the ignored `evals/artifacts/` directory because they can contain model reasoning. Run the real harness with:
 
 ```bash
 CODEX_BIN=/absolute/path/to/codex npm run host:eval -- --run
+npm run host:rubric
 ```
 
 The harness uses a single-command `-c mcp_servers.daily_persona=...` override and does not modify global Codex MCP configuration. This is evidence for a local Codex stdio integration only. It does not demonstrate that a public Streamable HTTP endpoint, ChatGPT plugin installation, portal Scan Tools, domain verification, or directory review works.
+
+`evals/host-rubric.json` derives a structured rubric from the deterministic trace checks. It is not an independent model judge and does not claim qualitative persona-styling coverage.
 
 ## Packaging
 
