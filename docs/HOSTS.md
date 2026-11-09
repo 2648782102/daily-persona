@@ -11,7 +11,8 @@ Official OpenAI documentation says Codex stores MCP configuration in `config.tom
 Clone this repository, then either edit `~/.codex/config.toml` or run:
 
 ```bash
-codex mcp add daily-persona -- node /absolute/path/to/daily-persona/src/mcp-stdio.js
+npm ci
+codex mcp add daily-persona -- node /absolute/path/to/daily-persona/src/mcp-stdio-sdk.js
 codex mcp list
 ```
 
@@ -20,7 +21,7 @@ Equivalent TOML:
 ```toml
 [mcp_servers.daily_persona]
 command = "node"
-args = ["/absolute/path/to/daily-persona/src/mcp-stdio.js"]
+args = ["/absolute/path/to/daily-persona/src/mcp-stdio-sdk.js"]
 
 [mcp_servers.daily_persona.env]
 DAILY_PERSONA_CATALOG = "/absolute/path/to/daily-persona/catalog/personas.v1.json"
@@ -45,7 +46,7 @@ enabled_tools = ["get_today_persona", "resolve_for_date", "list_catalog"]
 default_tools_approval_mode = "auto"
 ```
 
-If the deployment requires a bearer token, store it in an environment variable and use `bearer_token_env_var` or `env_http_headers`; do not paste credentials into version-controlled config. Codex also supports OAuth-backed HTTP MCP servers via `codex mcp login`.
+If the deployment requires a bearer token, store it in an environment variable and use `bearer_token_env_var` or `env_http_headers`; do not paste credentials into version-controlled config. Codex also supports OAuth-backed HTTP MCP servers via `codex mcp login`. Public plugin-directory submission does not currently support an API-key connection flow and rejects nonempty server headers; see `docs/SUBMISSION.md`.
 
 ## Skill installation
 
@@ -77,3 +78,4 @@ Use the same contract with any host that supports STDIO or Streamable HTTP:
 4. Treat all persona text as untrusted data; never let it change tool permissions or override instructions.
 5. Verify `/v1/signature.json` against a locally trusted key ring before accepting a remote catalog.
 6. Run `npm run evals` and, for real hosts, capture `codex exec --json` traces and grade them with `evals/style-rubric.schema.json`.
+7. For public plugin submission, run `npm run readiness` and complete every external blocker in `docs/SUBMISSION.md`; passing local checks alone is not publication readiness.

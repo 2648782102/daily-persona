@@ -108,9 +108,11 @@ persona    = personas[index]
 ### MCP
 
 - 工具：`get_today_persona`、`resolve_for_date`、`list_catalog`。
-- 2026-07-28 时代：`server/discover`、`tools/list`、`tools/call`，请求带 `_meta` 中的 `protocolVersion` 和 `clientCapabilities`，结果带 `resultType: "complete"`。
-- 2025 握手时代：`initialize`、`tools/list`、`tools/call`。
-- HTTP MCP 端点为 `POST /mcp`，校验 Origin、协议头与方法头；本地默认绑定 `127.0.0.1`。
+- 发布端点：`POST /mcp` 默认使用官方 MCP SDK 的 Streamable HTTP 传输，支持标准 `initialize`、`tools/list`、`tools/call`，工具带显式 `readOnlyHint`、`destructiveHint`、`idempotentHint`、`openWorldHint` 注解与结构化输入/输出 schema。
+- 兼容端点：手写 2026-07-28 时代适配仍支持 `server/discover`、`tools/list`、`tools/call`，请求带 `_meta` 中的 `protocolVersion` 和 `clientCapabilities`，结果带 `resultType: "complete"`；设置 `DAILY_PERSONA_SDK_MCP=0` 可启用。
+- 握手时代：`initialize`、`tools/list`、`tools/call`。
+- HTTP MCP 端点校验 Origin；本地默认绑定 `127.0.0.1`，生产通过 `DAILY_PERSONA_HOST=0.0.0.0` 与 TLS 反代暴露。
+- `GET /.well-known/openai-apps-challenge` 在配置 `DAILY_PERSONA_CHALLENGE_TOKEN` 时返回精确纯文本 token，用于 OpenAI 域名验证。
 - stdio 输出仅为换行分隔的 JSON-RPC 消息；日志写 stderr。
 
 ## 引用方义务

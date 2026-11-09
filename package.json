@@ -1,7 +1,7 @@
 {
   "name": "daily-persona",
-  "version": "0.2.0",
-  "private": true,
+  "version": "0.3.0",
+  "private": false,
   "type": "module",
   "description": "Deterministic daily persona data protocol with HTTP and MCP adapters",
   "scripts": {
@@ -13,10 +13,19 @@
     "check": "node src/cli.js check",
     "verify": "node src/cli.js verify",
     "sign": "node src/sign-cli.js",
-    "today": "node src/cli.js today"
+    "today": "node src/cli.js today",
+    "package:check": "node scripts/check-plugin.mjs",
+    "package:zip": "node scripts/package-plugin.mjs",
+    "readiness": "node scripts/check-readiness.mjs",
+    "host:eval": "node evals/run-host.mjs",
+    "rotation:drill": "node scripts/rotation-drill.mjs"
   },
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  }
 }

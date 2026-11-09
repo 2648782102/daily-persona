@@ -10,7 +10,7 @@ The bundled validator rejects control characters and command-like terms in perso
 
 Catalog bytes are signed with Ed25519. Signature verification checks the canonical JSON digest, key id, timestamp, key status, and cryptographic signature. A valid signature proves byte integrity and key ownership; it does not make persona text trusted instructions, and it does not replace host-side content review.
 
-Keep private keys out of Git. Rotate by adding a new active public key, publishing a signature made by the new key, then retiring the old key with a `retiredAt` timestamp. See `deploy/README.md`.
+Keep private keys out of Git. Rotate by adding a new active public key out of band, publishing a signature made by the new key, then retiring the old key with a `retiredAt` timestamp. See `docs/KEY-TRUST.md` and run `npm run rotation:drill` to exercise the rotation logic.
 
 ## Reporting a vulnerability
 
@@ -28,5 +28,6 @@ Include:
 | Version | Supported |
 | --- | --- |
 | `v0.2.x` | Yes |
+| `v0.3.x` | Yes |
 | `v0.1.x` | Yes |
 | earlier | No |

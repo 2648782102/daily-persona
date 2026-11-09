@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Persona</title>
+  <meta name="description" content="A deterministic, signed daily-review-lens protocol with a read-only MCP endpoint.">
+  <style>
+    :root { color-scheme: light; --ink: #16213e; --accent: #3b5bdb; --paper: #f7f8fc; }
+    body { margin: 0; font: 16px/1.65 system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--paper); }
+    main { max-width: 760px; margin: 0 auto; padding: 64px 24px; }
+    h1 { font-size: clamp(2rem, 6vw, 4rem); line-height: 1.05; margin: 0 0 24px; }
+    h2 { margin-top: 40px; }
+    a { color: var(--accent); }
+    .card { background: white; border: 1px solid #dce1ef; border-radius: 18px; padding: 28px; box-shadow: 0 12px 40px #16213e0d; }
+    code { background: #e9edfa; padding: 2px 6px; border-radius: 5px; }
+    nav { display: flex; gap: 16px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <p>Daily Persona · Plugin directory support</p>
+  <h1>One deterministic review lens per day.</h1>
+  <div class="card">
+    <p>Daily Persona resolves one persona from a versioned, Ed25519-signed catalog. Hosts freeze that result for a conversation and use it only to influence tone and review emphasis.</p>
+    <p>The MCP server is read-only. It does not accept account data, credentials, files, or arbitrary persona URLs. Persona text is always untrusted data.</p>
+    <nav>
+      <a href="https://github.com/2648782102/daily-persona">Source repository</a>
+      <a href="./support/">Support</a>
+      <a href="./privacy/">Privacy policy</a>
+      <a href="./terms/">Terms of service</a>
+    </nav>
+  </div>
+  <h2>Tools</h2>
+  <ul>
+    <li><code>get_today_persona</code>: resolve today's persona once.</li>
+    <li><code>resolve_for_date</code>: reproduce an explicit date.</li>
+    <li><code>list_catalog</code>: inspect bounded catalog metadata.</li>
+  </ul>
+  <p>Status: this site documents the submission candidate. It does not claim that a public MCP endpoint, directory review, or publication has completed.</p>
+</main>
+</body>
+</html>

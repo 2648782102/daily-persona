@@ -1,7 +1,11 @@
 .git
 .github
 node_modules
+dist
 evals/artifacts
 work
+site
+plugin
+scripts
 *.log
 *.pem

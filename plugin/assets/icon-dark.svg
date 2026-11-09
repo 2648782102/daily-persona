@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Daily Persona icon dark">
+  <rect width="128" height="128" rx="28" fill="#212121"/>
+  <circle cx="64" cy="54" r="22" fill="#91A7FF"/>
+  <path d="M28 104c5-20 19-31 36-31s31 11 36 31" fill="none" stroke="#91A7FF" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="94" cy="30" r="12" fill="#FFFFFF"/>
+</svg>

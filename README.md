@@ -4,6 +4,8 @@
 
 一个可复现的「每日人格」数据协议与参考实现。它解决的是**确定性解析、版本化引用和信任边界**，不是每天自动改写 `SKILL.md`，也不是把可变人格偷偷塞进系统提示。
 
+> 上架状态：仓库提供可提交候选包与发布清单，但仍未部署公共 HTTPS MCP 端点、未完成域名验证、未通过 OpenAI Platform 的 Scan Tools / 审核 / 发布。不要把这些外部步骤视为已完成。运行 `npm run readiness` 查看逐项状态。
+
 ## 为什么这样做
 
 - **确定性优先**：`resolve(date, timezone, seed, catalogVersion) -> persona`。不需要 cron、不需要每日 commit，也不需要客户端同步文件。
@@ -25,6 +27,8 @@ npm run verify
 npm run evals
 npm run today
 npm run cli -- date 2026-11-09 --json
+npm run package:check
+npm run readiness
 ```
 
 启动 HTTP 适配：
@@ -38,18 +42,26 @@ curl http://127.0.0.1:3399/v1/signature.json
 curl http://127.0.0.1:3399/v1/catalog.raw.json
 ```
 
-启动 MCP stdio 适配：
+启动官方 SDK MCP stdio 适配：
 
 ```bash
-node src/mcp-stdio.js
+node src/mcp-stdio-sdk.js
 ```
+
+兼容旧手写 2026/2025 双时代协议适配仍保留在 `node src/mcp-stdio.js`；发布端点默认使用官方 SDK 的 Streamable HTTP。
 
 在 Codex 中推荐配置 stdio（把 `REPO_PATH` 换成实际克隆路径）：
 
 ```toml
 [mcp_servers.daily_persona]
 command = "node"
-args = ["REPO_PATH/src/mcp-stdio.js"]
+args = ["REPO_PATH/src/mcp-stdio-sdk.js"]
+```
+
+首次安装依赖：
+
+```bash
+npm ci
 ```
 
 也可先启动 `npm run http`，再配置 Streamable HTTP：
@@ -73,7 +85,7 @@ Codex MCP 配置字段可参考 [Model Context Protocol](https://learn.chatgpt.c
 
 HTTP 适配还暴露纯数据端点：`/health`、`/v1/today.json`、`/v1/resolve`、`/v1/catalog.json`。响应带 `ETag` 和 `Cache-Control`；`today.json` 的缓存时间按所选时区的本地午夜计算。
 
-签名端点：`/v1/signature.json` 返回验签后的签名摘要与公钥，`/v1/catalog.raw.json` 返回用于独立验签的原始 catalog 字节。`npm run verify` 会用本地可信公钥环验证这些字节；失败时 `/health` 返回 500，拒绝带病启动。
+签名端点：`/v1/signature.json` 返回验签后的签名摘要与公钥，`/v1/catalog.raw.json` 返回用于独立验签的原始 catalog 字节。`npm run verify` 会用本地可信公钥环验证这些字节；失败时 `/health` 返回 500，拒绝带病启动。带外信任与轮换见 [`docs/KEY-TRUST.md`](docs/KEY-TRUST.md)。
 
 ## 引用契约
 
@@ -125,6 +137,8 @@ node src/sign-cli.js sign /private/key/dir/private-key.pem "$(cat /private/key/d
 
 `evals/` 提供 15 个确定性回归用例，覆盖触发、安全边界、事实谨慎、任务完成和风格；`npm run evals` 生成 `prompts.csv` 与 `results.json`。它不假装能证明所有模型表现一致；真实宿主应结合 `codex exec --json` trace 与结构化 rubric。见 [`evals/README.md`](evals/README.md)。
 
+`npm run host:eval` 是宿主评测就绪检查，不会把未捕获的 Codex trace 写成通过；`npm run rotation:drill` 用临时密钥演练 active/retired 轮换。
+
 ## 设计取舍
 
 - 不做 365 个 skill：OpenAI Docs 说明 skills 是可复用工作流，靠 `name/description` 触发，初始列表还有上下文预算；不适合塞人格库。见 [Build skills](https://learn.chatgpt.com/docs/build-skills)。
@@ -149,17 +163,25 @@ node src/sign-cli.js sign /private/key/dir/private-key.pem "$(cat /private/key/d
 | `docs/HOSTS.md` | Codex 与其他宿主接入说明 |
 | `evals/` | 小型确定性评测集与 rubric |
 | `Dockerfile` / `fly.toml` / `deploy/` | 可部署端点配置 |
+| `plugin/` | 便携式插件包、图标和审核用例 |
+| `site/` | GitHub Pages 产品、支持、隐私与条款页面 |
+| `docs/SUBMISSION.md` | 官方上架要求、完成项与外部阻塞项 |
 
 HTTP 测试通过内存请求对象调用 `handleHttpRequest`，不占用 TCP 端口，适合受限沙箱；`npm run http` 仍是真实 HTTP 服务入口。
+
+## 上架候选
+
+`v0.3.0` 增加官方 SDK MCP 服务、显式只读工具注解、域名挑战路由、插件包、5+3 审核用例、策略页源码、密钥治理与发布就绪检查。它不是「已上架」声明：真实托管端点、门户工具扫描、视频演示、开发者身份验证、真实宿主 trace、提交审核与发布仍需外部条件和用户确认。逐项清单见 [`docs/SUBMISSION.md`](docs/SUBMISSION.md)。
 
 ## 尚未做
 
 - 已提供签名验证与确定性评测，但尚未执行真实模型宿主的大规模 A/B 运行。
 - 尚未发布一个由本项目维护者持续运营的公共托管端点；仓库只提供可部署配置。
+- 尚未通过 OpenAI Platform 上传插件 ZIP、连接 MCP、Scan Tools、提交审核或发布。
 - 多语言 catalog 与用户自定义 catalog 的审核流程。
 
 这些不是协议正确性的阻塞项；若要把项目公开给不信任的引用方，应先用 `/v1/catalog.raw.json` 与本地可信公钥环独立验签，再决定缓存和引用。
 
 ## 发布
 
-当前版本见 `package.json` 与 `CHANGELOG.md`；`v0.1.0` 是首个可运行协议 MVP，`v0.2.0` 增加签名、评测、宿主接入文档与可部署容器配置。CI 在 Node 20、22、24 上执行测试、语法检查、catalog 检查、签名验证、评测、CLI 检查、MCP stdio 冒烟和容器构建。
+当前版本见 `package.json` 与 `CHANGELOG.md`；`v0.1.0` 是首个可运行协议 MVP，`v0.2.0` 增加签名、评测、宿主接入文档与可部署容器配置，`v0.3.0` 是面向插件目录审核的发布候选。CI 在 Node 20、22、24 上执行依赖安装与审计、测试、语法检查、catalog 检查、签名验证、评测、CLI 检查、双 MCP stdio 冒烟、插件校验、就绪检查和容器构建。

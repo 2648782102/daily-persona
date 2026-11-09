@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { spawn } from 'node:child_process';
 import { handleHttpRequest } from '../src/http-server.js';
 import { PROTOCOL_VERSION } from '../src/mcp.js';
 
@@ -9,6 +10,15 @@ function request(method, url, headers = {}, body = '') {
 
 function parseBody(result) {
   return JSON.parse(result.body);
+}
+
+function withLegacyMcp(callback) {
+  const previous = process.env.DAILY_PERSONA_SDK_MCP;
+  process.env.DAILY_PERSONA_SDK_MCP = '0';
+  return Promise.resolve(callback()).finally(() => {
+    if (previous === undefined) delete process.env.DAILY_PERSONA_SDK_MCP;
+    else process.env.DAILY_PERSONA_SDK_MCP = previous;
+  });
 }
 
 test('today.json returns deterministic persona and cache headers', async () => {
@@ -57,7 +67,33 @@ test('ETag conditional request returns 304', async () => {
   assert.equal(second.body, '');
 });
 
-test('MCP POST validates headers and returns structured persona', async () => {
+test('domain challenge returns the exact plain-text token when configured', async () => {
+  const previous = process.env.DAILY_PERSONA_CHALLENGE_TOKEN;
+  process.env.DAILY_PERSONA_CHALLENGE_TOKEN = 'openai-challenge-token-123';
+  try {
+    const result = await handleHttpRequest(request('GET', '/.well-known/openai-apps-challenge'));
+    assert.equal(result.status, 200);
+    assert.equal(result.body, 'openai-challenge-token-123');
+    assert.match(result.headers['Content-Type'], /^text\/plain/);
+  } finally {
+    if (previous === undefined) delete process.env.DAILY_PERSONA_CHALLENGE_TOKEN;
+    else process.env.DAILY_PERSONA_CHALLENGE_TOKEN = previous;
+  }
+});
+
+test('domain challenge is unavailable when no token is configured', async () => {
+  const previous = process.env.DAILY_PERSONA_CHALLENGE_TOKEN;
+  delete process.env.DAILY_PERSONA_CHALLENGE_TOKEN;
+  try {
+    const result = await handleHttpRequest(request('GET', '/.well-known/openai-apps-challenge'));
+    assert.equal(result.status, 404);
+    assert.equal(result.body, '');
+  } finally {
+    if (previous !== undefined) process.env.DAILY_PERSONA_CHALLENGE_TOKEN = previous;
+  }
+});
+
+test('MCP POST validates headers and returns structured persona', async () => withLegacyMcp(async () => {
   const body = JSON.stringify({
     jsonrpc: '2.0',
     id: 7,
@@ -80,9 +116,9 @@ test('MCP POST validates headers and returns structured persona', async () => {
   }, body));
   assert.equal(result.status, 200);
   assert.equal(parseBody(result).result.structuredContent.contract.date, '2026-11-09');
-});
+}));
 
-test('MCP POST rejects header mismatch', async () => {
+test('MCP POST rejects header mismatch', async () => withLegacyMcp(async () => {
   const body = JSON.stringify({
     jsonrpc: '2.0',
     id: 8,
@@ -100,15 +136,15 @@ test('MCP POST rejects header mismatch', async () => {
   }, body));
   assert.equal(result.status, 400);
   assert.equal(parseBody(result).error.code, -32020);
-});
+}));
 
-test('foreign Origin is rejected for MCP POST', async () => {
+test('foreign Origin is rejected for MCP POST', async () => withLegacyMcp(async () => {
   const result = await handleHttpRequest(request('POST', '/mcp', {
     'Content-Type': 'application/json',
     Origin: 'https://evil.example',
   }, JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'ping' })));
   assert.equal(result.status, 403);
-});
+}));
 
 test('unknown paths and unsupported methods are rejected', async () => {
   const missing = await handleHttpRequest(request('GET', '/nope'));

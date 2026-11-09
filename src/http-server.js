@@ -6,6 +6,7 @@ import { loadCatalog } from './catalog.js';
 import { resolveForDate, zonedDate } from './resolve.js';
 import { PROTOCOL_VERSION, handleMcpRequest } from './mcp.js';
 import { verifyCatalogSignature } from './signing.js';
+import { handleSdkHttpRequest } from './mcp-sdk.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
 const HOST = process.env.DAILY_PERSONA_HOST || '127.0.0.1';
@@ -17,6 +18,12 @@ const ORIGIN_ALLOWLIST = (process.env.DAILY_PERSONA_ALLOWED_ORIGINS || '')
 const DEFAULT_CATALOG_PATH = new URL('../catalog/personas.v1.json', import.meta.url).pathname;
 const SIGNATURE_PATH = process.env.DAILY_PERSONA_SIGNATURE || new URL('../catalog/personas.v1.sig.json', import.meta.url).pathname;
 const TRUSTED_KEYS_PATH = process.env.DAILY_PERSONA_TRUSTED_KEYS || new URL('../catalog/trusted-keys.json', import.meta.url).pathname;
+function sdkMcpMode() {
+  return process.env.DAILY_PERSONA_SDK_MCP !== '0';
+}
+const RATE_LIMIT = Number.parseInt(process.env.DAILY_PERSONA_RATE_LIMIT || '120', 10);
+const RATE_WINDOW_MS = 60_000;
+const rateBuckets = new Map();
 
 let verificationCache = null;
 
@@ -65,6 +72,20 @@ function jsonResult(status, payload, headers = {}) {
   };
 }
 
+function textResult(status, text, headers = {}) {
+  return {
+    status,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Length': Buffer.byteLength(text),
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...headers,
+    },
+    body: text,
+  };
+}
+
 function emptyResult(status, headers = {}) {
   return { status, headers, body: '' };
 }
@@ -77,6 +98,46 @@ function headerValue(headers, name) {
     }
   }
   return undefined;
+}
+
+function securityHeaders() {
+  return {
+    'Referrer-Policy': 'no-referrer',
+    'X-Frame-Options': 'DENY',
+    'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    ...(process.env.DAILY_PERSONA_HSTS === '1'
+      ? { 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' }
+      : {}),
+  };
+}
+
+function clientAddress(request) {
+  const forwarded = headerValue(request.headers, 'x-forwarded-for');
+  if (forwarded && process.env.DAILY_PERSONA_TRUST_PROXY === '1') {
+    return forwarded.split(',')[0].trim();
+  }
+  return request.remoteAddress || 'unknown';
+}
+
+function enforceRateLimit(request) {
+  if (!Number.isInteger(RATE_LIMIT) || RATE_LIMIT <= 0) {
+    return true;
+  }
+  const now = Date.now();
+  const address = clientAddress(request);
+  const bucket = rateBuckets.get(address) ?? { count: 0, resetAt: now + RATE_WINDOW_MS };
+  if (bucket.resetAt <= now) {
+    bucket.count = 0;
+    bucket.resetAt = now + RATE_WINDOW_MS;
+  }
+  bucket.count += 1;
+  rateBuckets.set(address, bucket);
+  if (rateBuckets.size > 10_000) {
+    for (const [key, value] of rateBuckets) {
+      if (value.resetAt <= now) rateBuckets.delete(key);
+    }
+  }
+  return bucket.count <= RATE_LIMIT;
 }
 
 function normalizedHeaders(headers = {}) {
@@ -154,6 +215,14 @@ function protocolHttpStatus(error) {
 async function restResult(request, url, catalog, now, options = {}) {
   const date = url.searchParams.get('date') ?? undefined;
   const timezone = url.searchParams.get('timezone') ?? catalog.timezone;
+
+  if (url.pathname === '/.well-known/openai-apps-challenge') {
+    const challengeToken = process.env.DAILY_PERSONA_CHALLENGE_TOKEN || '';
+    if (!challengeToken) {
+      return textResult(404, '');
+    }
+    return textResult(200, challengeToken);
+  }
 
   if (url.pathname === '/health') {
     let signature = { status: 'unknown' };
@@ -246,7 +315,7 @@ async function restResult(request, url, catalog, now, options = {}) {
   return jsonResult(404, { error: 'not found' });
 }
 
-async function mcpResult(request, body, catalog) {
+async function legacyMcpResult(request, body, catalog) {
   if (!checkOrigin(request)) {
     return jsonResult(403, {
       jsonrpc: '2.0',
@@ -285,21 +354,50 @@ export async function handleHttpRequest(request, options = {}) {
     return restResult(request, url, catalog, now, options);
   }
 
-  if (request.method === 'POST' && url.pathname === '/mcp') {
-    return mcpResult(request, body, catalog);
+  if (request.method === 'POST' && url.pathname === '/mcp' && !sdkMcpMode()) {
+    return legacyMcpResult(request, body, catalog);
   }
 
   return jsonResult(405, { error: 'method not allowed' }, { Allow: 'GET, POST' });
 }
 
 function sendHttpResult(response, result) {
-  response.writeHead(result.status, result.headers);
+  response.writeHead(result.status, { ...securityHeaders(), ...result.headers });
   response.end(result.body);
 }
 
 export function createHttpServer() {
   return http.createServer(async (request, response) => {
     try {
+      if (!enforceRateLimit(request)) {
+        sendHttpResult(response, jsonResult(429, { error: 'rate limit exceeded' }));
+        return;
+      }
+
+      const url = new URL(request.url, `http://${headerValue(request.headers, 'host') || 'localhost'}`);
+      if (sdkMcpMode() && request.method === 'POST' && url.pathname === '/mcp') {
+        if (!checkOrigin({ headers: normalizedHeaders(request.headers) })) {
+          sendHttpResult(response, jsonResult(403, {
+            jsonrpc: '2.0',
+            error: { code: -32600, message: 'Forbidden origin' },
+          }));
+          return;
+        }
+        const body = await readBody(request);
+        let parsedBody;
+        try {
+          parsedBody = JSON.parse(body);
+        } catch {
+          sendHttpResult(response, jsonResult(400, {
+            jsonrpc: '2.0',
+            error: { code: -32700, message: 'Parse error' },
+          }));
+          return;
+        }
+        await handleSdkHttpRequest(request, response, parsedBody);
+        return;
+      }
+
       const catalog = await loadCatalog();
       const body = request.method === 'POST' ? await readBody(request) : '';
       const result = await handleHttpRequest({
@@ -312,6 +410,9 @@ export function createHttpServer() {
     } catch (error) {
       if (!response.headersSent) {
         sendHttpResult(response, jsonResult(400, { error: error.message }));
+      }
+      if (!response.writableEnded) {
+        response.end();
       }
     }
   });

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Daily Persona Privacy Policy</title></head>
+<body>
+<main>
+  <h1>Privacy Policy</h1>
+  <p><strong>Last updated:</strong> 2026-11-10. This policy covers the Daily Persona plugin and its read-only MCP endpoint.</p>
+  <h2>Data the plugin asks for</h2>
+  <p>The tools accept only a calendar date, IANA timezone, seed, and catalog version. They do not ask for names, account identifiers, credentials, payment data, health data, government identifiers, files, or arbitrary URLs.</p>
+  <h2>Data returned</h2>
+  <p>The plugin returns deterministic persona records and catalog metadata: version, digest, seed, timezone, date, rotation, labels, summaries, prompts, focus areas, restrictions, and a trust contract. It does not return user profile data or internal request identifiers.</p>
+  <h2>Processing and recipients</h2>
+  <p>The reference server computes results locally from a bundled signed catalog and returns them to the requesting host. It has no database, analytics, advertising, or third-party API integration. A deployment operator may receive standard network metadata, such as IP address and request time, through hosting logs; operation of that infrastructure is outside this repository.</p>
+  <h2>Retention and controls</h2>
+  <p>The reference server does not persist tool inputs or outputs. The host controls conversation history. Users can decline to invoke the plugin, specify a reproducible date, or disable the skill in the host. The plugin does not provide account deletion because it creates no accounts.</p>
+  <h2>Security</h2>
+  <p>Catalog bytes are signed with Ed25519 and verified against a trusted public-key ring. A signature proves byte integrity, not that persona text is trusted instruction. Hosts must treat persona fields as untrusted data.</p>
+  <h2>Contact</h2>
+  <p>Use the <a href="../support/">support page</a> for privacy questions. Do not include personal data beyond what is necessary to describe the request.</p>
+</main>
+</body>
+</html>

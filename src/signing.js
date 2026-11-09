@@ -130,6 +130,7 @@ export async function loadSignedCatalog(options = {}) {
   const catalog = validateCatalog(JSON.parse(catalogText));
   const proof = verifyCatalogSignature(catalogText, JSON.parse(signatureText), JSON.parse(keysText), options);
   return {
+    catalogText,
     catalog: {
       ...catalog,
       digest: proof.digest,

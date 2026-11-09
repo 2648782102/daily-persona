@@ -1,0 +1,14 @@
+interface:
+  display_name: "Daily Persona"
+  short_description: "Resolve one frozen daily persona and apply it only to tone and review emphasis."
+  default_prompt: "Use $daily-persona to resolve today's persona once, then keep it frozen for this task."
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "daily_persona"
+      description: "Read-only Daily Persona Streamable HTTP MCP server"
+      transport: "streamable-http"

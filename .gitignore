@@ -4,3 +4,4 @@ node_modules/
 evals/artifacts/
 deploy/private-keys/
 *.pem
+dist/

@@ -46,3 +46,28 @@ All notable changes to this project are documented here. The format follows [Kee
 - Deterministic evals do not prove third-party model behavior; host runs still need captured traces and rubric grading.
 
 [0.2.0]: https://github.com/2648782102/daily-persona/releases/tag/v0.2.0
+
+## [0.3.0] - 2026-11-10
+
+### Added
+
+- Official MCP SDK server for Streamable HTTP and stdio, with structured schemas and explicit read-only tool annotations.
+- `/.well-known/openai-apps-challenge` plain-text route for OpenAI domain verification.
+- Portable plugin package with `plugin.json`, `mcp.json`, one bundled skill, four square SVG assets, five positive and three negative review cases.
+- GitHub Pages source for product, support, privacy, and terms URLs plus the static-site deployment workflow.
+- `docs/SUBMISSION.md`, `docs/KEY-TRUST.md`, `npm run readiness`, `npm run package:check`, `npm run package:zip`, `npm run host:eval`, and `npm run rotation:drill`.
+- Real TCP smoke tests for SDK Streamable HTTP and SDK stdio, plus a key-rotation drill using ephemeral keys.
+
+### Changed
+
+- The publishable HTTP endpoint uses the official SDK transport by default; the earlier dual-era hand-written adapter remains available with `DAILY_PERSONA_SDK_MCP=0`.
+- Production responses add conservative security headers, optional HSTS, and a simple per-client rate limit.
+- `loadSignedCatalog()` exposes canonical catalog bytes for rotation tests.
+- Dockerfile installs locked production dependencies with `npm ci`; CI installs dependencies and audits them on Node 20, 22, and 24.
+
+### Limitations
+
+- No public HTTPS MCP endpoint, domain verification, OpenAI Platform tool scan, verified developer identity, demo recording, real host trace eval, directory submission, approval, or publication has happened.
+- `npm run package:zip` intentionally fails until the MCP URL and demo recording placeholders are replaced with verified public URLs.
+
+[0.3.0]: https://github.com/2648782102/daily-persona/releases/tag/v0.3.0
