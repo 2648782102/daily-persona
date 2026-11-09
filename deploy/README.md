@@ -31,6 +31,15 @@ DAILY_PERSONA_RATE_LIMIT=120
 
 The challenge endpoint returns 404 unless `DAILY_PERSONA_CHALLENGE_TOKEN` is set. Serve only the exact token as plain text. Do not put secrets or tokens in `plugin/mcp.json`: public plugin submission rejects nonempty server headers.
 
+After DNS and TLS are active, run the external smoke test from a machine outside the hosting network:
+
+```bash
+DAILY_PERSONA_CHALLENGE_TOKEN=<portal challenge token> \
+  npm run smoke:live --silent -- https://<host>
+```
+
+It checks `/health`, the exact challenge text, MCP initialize, tool listing, read-only annotations, and all three tool calls. A passing run is deployment evidence, not an OpenAI Platform approval.
+
 ## Fly.io
 
 `fly.toml` is a minimal deployment definition. Replace the placeholder app name, create the app, and deploy:

@@ -18,12 +18,19 @@
     "package:zip": "node scripts/package-plugin.mjs",
     "readiness": "node scripts/check-readiness.mjs",
     "host:eval": "node evals/run-host.mjs",
-    "rotation:drill": "node scripts/rotation-drill.mjs"
+    "smoke:live": "node scripts/smoke-live-endpoint.mjs",
+    "rotation:drill": "node scripts/rotation-drill.mjs",
+    "pack:check": "npm pack --dry-run"
   },
   "engines": {
     "node": ">=20"
   },
   "license": "MIT",
+  "bin": {
+    "daily-persona": "src/cli.js",
+    "daily-persona-http": "src/http-server.js",
+    "daily-persona-mcp": "src/mcp-stdio-sdk.js"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"

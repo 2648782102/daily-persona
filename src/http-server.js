@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import http from 'node:http';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';

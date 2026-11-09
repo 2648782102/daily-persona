@@ -7,8 +7,11 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const plugin = JSON.parse(await readFile(path.join(root, 'plugin', 'plugin.json'), 'utf8'));
 const mcp = JSON.parse(await readFile(path.join(root, 'plugin', 'mcp.json'), 'utf8'));
+const hostReport = JSON.parse(await readFile(path.join(root, 'evals', 'host-report.json'), 'utf8'));
 const endpoint = mcp.mcpServers.daily_persona.url;
 const demo = plugin.extensions['com.openai'].review.demo_recording_url;
+const hostChecksPass = hostReport.mode === 'real-codex-exec'
+  && hostReport.checks.every((check) => check.status === 'pass');
 
 const checks = [
   {
@@ -32,9 +35,26 @@ const checks = [
     evidence: 'GET /.well-known/openai-apps-challenge returns DAILY_PERSONA_CHALLENGE_TOKEN as plain text',
   },
   {
+    id: 'ci-matrix',
+    status: 'done',
+    evidence: 'GitHub Actions run 42663629663 passed npm ci, audit, tests, evals, SDK smoke, plugin check, and readiness on Node 20/22/24',
+  },
+  {
     id: 'policy-pages-source',
     status: 'done',
     evidence: 'site/ contains homepage, support, privacy, and terms pages',
+  },
+  {
+    id: 'public-policy-urls',
+    status: 'done',
+    evidence: 'GitHub Pages workflow 42663629516 attempt 2 succeeded; website, support, privacy, and terms URLs returned public HTTPS 200 on 2026-11-10',
+  },
+  {
+    id: 'codex-host-trace-evals',
+    status: hostChecksPass ? 'done' : 'blocked',
+    evidence: hostChecksPass
+      ? 'evals/host-report.json records a 5/5 local Codex CLI stdio MCP run with ephemeral -c config'
+      : 'run npm run host:eval -- --run with CODEX_BIN and commit a passing evals/host-report.json',
   },
   {
     id: 'public-mcp-endpoint',
@@ -42,14 +62,14 @@ const checks = [
     evidence: endpoint,
   },
   {
-    id: 'public-policy-urls',
-    status: 'needs-verification',
-    evidence: 'GitHub Pages URLs must return HTTPS 200 after deployment',
-  },
-  {
     id: 'domain-verification-challenge',
     status: 'blocked',
     evidence: 'Portal challenge token and deployed HTTPS host are required',
+  },
+  {
+    id: 'deployment-operations',
+    status: 'blocked',
+    evidence: 'Stable host ownership, TLS, logs, availability monitoring, incident contact, and key-rotation runbook are not deployed',
   },
   {
     id: 'demo-recording-url',
@@ -62,14 +82,14 @@ const checks = [
     evidence: 'Verified developer identity and api.apps.write are external account prerequisites',
   },
   {
+    id: 'live-mcp-conformance',
+    status: 'blocked',
+    evidence: 'Requires external HTTPS verification of initialize, tools/list, all tools/call cases, annotations, challenge, and rate limiting',
+  },
+  {
     id: 'portal-tool-scan',
     status: 'blocked',
     evidence: 'Requires uploaded ZIP, connected public MCP endpoint, and Platform dashboard access',
-  },
-  {
-    id: 'codex-host-trace-evals',
-    status: 'blocked',
-    evidence: 'Run npm run host:eval with CODEX_HOME or an installed plugin after deployment',
   },
   {
     id: 'directory-review-and-publish',

@@ -2,6 +2,7 @@ node_modules/
 .DS_Store
 *.log
 evals/artifacts/
+work/
 deploy/private-keys/
 *.pem
 dist/

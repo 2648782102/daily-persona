@@ -57,6 +57,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - GitHub Pages source for product, support, privacy, and terms URLs plus the static-site deployment workflow.
 - `docs/SUBMISSION.md`, `docs/KEY-TRUST.md`, `npm run readiness`, `npm run package:check`, `npm run package:zip`, `npm run host:eval`, and `npm run rotation:drill`.
 - Real TCP smoke tests for SDK Streamable HTTP and SDK stdio, plus a key-rotation drill using ephemeral keys.
+- A sanitized local Codex CLI stdio MCP host report with five passing trace checks and an ephemeral single-command config override.
+- npm package entrypoints for the CLI, HTTP server, and SDK MCP stdio server, plus an npm package-content check.
+- A public-endpoint smoke script for external HTTPS health, challenge, MCP initialize, tool annotations, and tool-call verification.
 
 ### Changed
 
@@ -64,10 +67,11 @@ All notable changes to this project are documented here. The format follows [Kee
 - Production responses add conservative security headers, optional HSTS, and a simple per-client rate limit.
 - `loadSignedCatalog()` exposes canonical catalog bytes for rotation tests.
 - Dockerfile installs locked production dependencies with `npm ci`; CI installs dependencies and audits them on Node 20, 22, and 24.
+- CI also validates plugin and npm package contents; the npm tarball excludes submission-only assets, docs, site sources, and tests.
 
 ### Limitations
 
-- No public HTTPS MCP endpoint, domain verification, OpenAI Platform tool scan, verified developer identity, demo recording, real host trace eval, directory submission, approval, or publication has happened.
+- No public HTTPS MCP endpoint, domain verification, OpenAI Platform tool scan, verified developer identity, demo recording, installed-plugin host trace eval, directory submission, approval, or publication has happened.
 - `npm run package:zip` intentionally fails until the MCP URL and demo recording placeholders are replaced with verified public URLs.
 
 [0.3.0]: https://github.com/2648782102/daily-persona/releases/tag/v0.3.0
