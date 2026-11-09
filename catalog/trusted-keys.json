@@ -1,0 +1,11 @@
+{
+  "version": "daily-persona-keys/v1",
+  "description": "Trusted Ed25519 public keys for daily-persona catalogs.",
+  "keys": [
+    {
+      "keyId": "key-113bc3183627",
+      "status": "active",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMPITZSEbCVDJdT78gX5c3OAsqppLtXxRj4d8K7CvDTk=\n-----END PUBLIC KEY-----\n"
+    }
+  ]
+}

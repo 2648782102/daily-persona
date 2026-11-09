@@ -24,6 +24,30 @@ test('today.json returns deterministic persona and cache headers', async () => {
   assert.equal(payload.contract.untrustedData, true);
 });
 
+test('health reports verified catalog signature', async () => {
+  const result = await handleHttpRequest(request('GET', '/health'));
+  assert.equal(result.status, 200);
+  const payload = parseBody(result);
+  assert.equal(payload.signature.status, 'verified');
+  assert.match(payload.signature.digest, /^sha256:[a-f0-9]{64}$/);
+});
+
+test('signature endpoint exposes a verifiable public key and signature', async () => {
+  const result = await handleHttpRequest(request('GET', '/v1/signature.json'));
+  assert.equal(result.status, 200);
+  const payload = parseBody(result);
+  assert.equal(payload.verification, 'verified-by-server');
+  assert.equal(payload.algorithm, 'Ed25519');
+  assert.match(payload.publicKey, /BEGIN PUBLIC KEY/);
+  assert.match(payload.signature, /^[A-Za-z0-9+/]+={0,2}$/);
+});
+
+test('raw catalog is served for independent verification', async () => {
+  const result = await handleHttpRequest(request('GET', '/v1/catalog.raw.json'));
+  assert.equal(result.status, 200);
+  assert.equal(parseBody(result).version, 'persona-catalog-v1');
+});
+
 test('ETag conditional request returns 304', async () => {
   const first = await handleHttpRequest(request('GET', '/v1/catalog.json'));
   const second = await handleHttpRequest(request('GET', '/v1/catalog.json', {

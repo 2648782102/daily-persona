@@ -1,9 +1,11 @@
 import http from 'node:http';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import { loadCatalog } from './catalog.js';
 import { resolveForDate, zonedDate } from './resolve.js';
 import { PROTOCOL_VERSION, handleMcpRequest } from './mcp.js';
+import { verifyCatalogSignature } from './signing.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
 const HOST = process.env.DAILY_PERSONA_HOST || '127.0.0.1';
@@ -12,6 +14,41 @@ const ORIGIN_ALLOWLIST = (process.env.DAILY_PERSONA_ALLOWED_ORIGINS || '')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean);
+const DEFAULT_CATALOG_PATH = new URL('../catalog/personas.v1.json', import.meta.url).pathname;
+const SIGNATURE_PATH = process.env.DAILY_PERSONA_SIGNATURE || new URL('../catalog/personas.v1.sig.json', import.meta.url).pathname;
+const TRUSTED_KEYS_PATH = process.env.DAILY_PERSONA_TRUSTED_KEYS || new URL('../catalog/trusted-keys.json', import.meta.url).pathname;
+
+let verificationCache = null;
+
+async function loadVerification(options = {}) {
+  if (options.verification) return options.verification;
+  if (verificationCache) return verificationCache;
+  const catalogPath = options.catalogPath ?? process.env.DAILY_PERSONA_CATALOG ?? DEFAULT_CATALOG_PATH;
+  const signaturePath = options.signaturePath ?? SIGNATURE_PATH;
+  const keysPath = options.keysPath ?? TRUSTED_KEYS_PATH;
+  const [catalogText, signatureText, keysText] = await Promise.all([
+    readFile(catalogPath, 'utf8'),
+    readFile(signaturePath, 'utf8'),
+    readFile(keysPath, 'utf8'),
+  ]);
+  const signature = JSON.parse(signatureText);
+  const keyRing = JSON.parse(keysText);
+  const proof = verifyCatalogSignature(catalogText, signature, keyRing, { now: options.now ?? new Date() });
+  const catalog = JSON.parse(catalogText);
+  verificationCache = {
+    catalogText,
+    catalog,
+    signature,
+    keyRing,
+    proof,
+    paths: { catalogPath, signaturePath, keysPath },
+  };
+  return verificationCache;
+}
+
+function verificationError(error) {
+  return jsonResult(500, { error: `catalog signature verification failed: ${error.message}` });
+}
 
 function jsonResult(status, payload, headers = {}) {
   const body = `${JSON.stringify(payload, null, 2)}\n`;
@@ -114,16 +151,29 @@ function protocolHttpStatus(error) {
   return 200;
 }
 
-function restResult(request, url, catalog, now) {
+async function restResult(request, url, catalog, now, options = {}) {
   const date = url.searchParams.get('date') ?? undefined;
   const timezone = url.searchParams.get('timezone') ?? catalog.timezone;
 
   if (url.pathname === '/health') {
+    let signature = { status: 'unknown' };
+    try {
+      const verified = await loadVerification(options);
+      signature = {
+        status: 'verified',
+        keyId: verified.proof.keyId,
+        keyStatus: verified.proof.keyStatus,
+        digest: verified.proof.digest,
+      };
+    } catch (error) {
+      return verificationError(error);
+    }
     return conditionalJson(request, 200, {
       ok: true,
       service: 'daily-persona',
       protocolVersion: PROTOCOL_VERSION,
       date: zonedDate(now, catalog.timezone),
+      signature,
     }, 0);
   }
 
@@ -144,6 +194,34 @@ function restResult(request, url, catalog, now) {
       })),
     };
     return conditionalJson(request, 200, payload, 3600);
+  }
+
+  if (url.pathname === '/v1/catalog.raw.json') {
+    try {
+      const verified = await loadVerification(options);
+      return conditionalJson(request, 200, verified.catalog, 3600);
+    } catch (error) {
+      return verificationError(error);
+    }
+  }
+
+  if (url.pathname === '/v1/signature.json') {
+    try {
+      const verified = await loadVerification(options);
+      return conditionalJson(request, 200, {
+        version: 'daily-persona-signature/v1',
+        digest: verified.proof.digest,
+        keyId: verified.proof.keyId,
+        keyStatus: verified.proof.keyStatus,
+        createdAt: verified.signature.createdAt,
+        algorithm: verified.signature.algorithm,
+        signature: verified.signature.signature,
+        publicKey: verified.keyRing.keys.find((entry) => entry.keyId === verified.signature.keyId)?.publicKey,
+        verification: 'verified-by-server',
+      }, 3600);
+    } catch (error) {
+      return verificationError(error);
+    }
   }
 
   if (url.pathname === '/v1/today.json') {
@@ -204,7 +282,7 @@ export async function handleHttpRequest(request, options = {}) {
   const body = typeof request.body === 'string' ? request.body : '';
 
   if (request.method === 'GET' && url.pathname !== '/mcp') {
-    return restResult(request, url, catalog, now);
+    return restResult(request, url, catalog, now, options);
   }
 
   if (request.method === 'POST' && url.pathname === '/mcp') {

@@ -1,2 +1,5 @@
 [mcp_servers.daily_persona]
+# 本地开发；公网部署时改成 https://<your-host>/mcp，并按需配置 bearer_token_env_var。
 url = "http://127.0.0.1:3399/mcp"
+enabled_tools = ["get_today_persona", "resolve_for_date", "list_catalog"]
+default_tools_approval_mode = "auto"

@@ -1,0 +1,8 @@
+{
+  "version": "daily-persona-signature/v1",
+  "keyId": "key-113bc3183627",
+  "algorithm": "Ed25519",
+  "digest": "sha256:7adfcff3d69f191cd46dfe14833fb3831abd70bc7be730a4f1d5afb02d5cd82b",
+  "createdAt": "2026-11-09T16:42:32.114Z",
+  "signature": "QICK4p6DT0DNMR1w6ps6L3ctFMvk6x8EG7ObqIK602KdwWETw8/58sulv+IFGs9LawAagcFzU558ScZC1bTbCA=="
+}

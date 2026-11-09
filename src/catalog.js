@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -83,6 +83,12 @@ export function validateCatalog(catalog) {
   return catalog;
 }
 
+export function canonicalCatalog(catalog) {
+  const { digest, source, ...content } = catalog;
+  validateCatalog(content);
+  return `${JSON.stringify(content, null, 2)}\n`;
+}
+
 export async function loadCatalog(catalogPath = process.env.DAILY_PERSONA_CATALOG || DEFAULT_CATALOG_PATH) {
   const resolvedPath = path.resolve(catalogPath);
   const text = await readFile(resolvedPath, 'utf8');
@@ -93,4 +99,12 @@ export async function loadCatalog(catalogPath = process.env.DAILY_PERSONA_CATALO
     digest: `sha256:${digest}`,
     source: resolvedPath,
   };
+}
+
+export async function formatCatalog(catalogPath = process.env.DAILY_PERSONA_CATALOG || DEFAULT_CATALOG_PATH) {
+  const resolvedPath = path.resolve(catalogPath);
+  const text = await readFile(resolvedPath, 'utf8');
+  const canonicalText = canonicalCatalog(JSON.parse(text));
+  await writeFile(resolvedPath, canonicalText, 'utf8');
+  return resolvedPath;
 }

@@ -1,0 +1,5 @@
+id,should_trigger,prompt
+trigger-explicit,true,"使用 $daily-persona 告诉我今天的评审视角"
+trigger-implicit,true,"今天用哪个每日人格来审阅这份改动？"
+negative-code-review,false,"帮我做一次普通代码审查，不需要每日人格"
+negative-status,false,"查看当前 Git 状态和最近五条提交"

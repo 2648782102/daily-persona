@@ -2,12 +2,14 @@ import { writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import { loadCatalog, validateCatalog } from './catalog.js';
 import { resolveForDate } from './resolve.js';
+import { loadSignedCatalog } from './signing.js';
 
 function usage() {
   return `daily-persona
 
 Commands:
   check              Validate the persona catalog
+  verify             Verify the catalog signature with trusted keys
   today [--json]     Resolve today's persona
   date <YYYY-MM-DD>  Resolve a specific date
   dump [path]        Write today.json to a file or stdout
@@ -16,11 +18,13 @@ Commands:
 }
 
 function parseOptions(args) {
-  const options = { json: false };
+  const options = { json: false, signed: false };
   const positionals = [];
   for (const arg of args) {
     if (arg === '--json') {
       options.json = true;
+    } else if (arg === '--signed') {
+      options.signed = true;
     } else {
       positionals.push(arg);
     }
@@ -46,7 +50,9 @@ function printResolution(resolution, json) {
 async function main() {
   const [command = 'today', ...args] = process.argv.slice(2);
   const { options, positionals } = parseOptions(args);
-  const catalog = await loadCatalog();
+  const catalog = options.signed
+    ? (await loadSignedCatalog()).catalog
+    : await loadCatalog();
 
   if (command === 'help' || command === '--help' || command === '-h') {
     process.stdout.write(usage());
@@ -56,6 +62,16 @@ async function main() {
   if (command === 'check') {
     validateCatalog(catalog);
     process.stdout.write(`OK ${catalog.version} ${catalog.digest} (${catalog.personas.length} personas)\n`);
+    return;
+  }
+
+  if (command === 'verify') {
+    const signed = await loadSignedCatalog();
+    process.stdout.write([
+      `OK ${signed.catalog.version} ${signed.catalog.digest}`,
+      `Signature: ${signed.signature.keyId} (${signed.signature.keyStatus}) ${signed.signature.createdAt}`,
+      '',
+    ].join('\n'));
     return;
   }
 
