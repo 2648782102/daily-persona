@@ -6,3 +6,5 @@ work/
 deploy/private-keys/
 *.pem
 dist/
+.wrangler/
+dev.vars

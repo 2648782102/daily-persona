@@ -7,6 +7,11 @@ Dockerfile
 fly.toml
 deploy/
 docs/
+deploy/workers/embedded-catalog.js
+deploy/workers/src/
+deploy/workers/package.json
+deploy/workers/package-lock.json
+deploy/workers/wrangler.toml
 evals/artifacts/
 examples/
 site/
@@ -16,6 +21,9 @@ work/
 evals/
 scripts/check-plugin.mjs
 scripts/check-readiness.mjs
+scripts/build-workers.mjs
+scripts/check-workers.mjs
+scripts/sign-tag.mjs
 scripts/package-plugin.mjs
 scripts/rotation-drill.mjs
 scripts/smoke-live-endpoint.mjs

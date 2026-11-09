@@ -1,0 +1,60 @@
+name: Deploy Workers
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-workers
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Worker dependencies
+        working-directory: deploy/workers
+        run: npm ci
+      - name: Generate embedded signed catalog
+        run: npm run workers:build --silent
+      - name: Validate Worker source, endpoints, and bundle
+        run: npm run workers:check --silent
+      - name: Dry-run Worker bundle
+        working-directory: deploy/workers
+        run: npm run dry-run --silent
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.159.0
+          workingDirectory: deploy/workers
+          command: deploy --env production
+      - name: Show next verification step
+        env:
+          WORKER_HOST: ${{ vars.DAILY_PERSONA_WORKER_HOST }}
+        run: |
+          if [ -z "$WORKER_HOST" ]; then
+            echo "Set repository variable DAILY_PERSONA_WORKER_HOST to the deployed hostname and run npm run smoke:live."
+            exit 0
+          fi
+          echo "Verify: DAILY_PERSONA_CHALLENGE_TOKEN=<portal token> npm run smoke:live -- -- https://$WORKER_HOST"

@@ -30,6 +30,8 @@ npm run cli -- date 2026-11-09 --json
 npm run package:check
 npm run readiness
 npm run pack:check
+npm run workers:build
+npm run workers:check
 CODEX_BIN=/absolute/path/to/codex npm run host:eval -- --run
 npm run host:rubric
 ```
@@ -174,6 +176,7 @@ node src/sign-cli.js sign /private/key/dir/private-key.pem "$(cat /private/key/d
 | `docs/HOSTS.md` | Codex 与其他宿主接入说明 |
 | `evals/` | 小型确定性评测集与 rubric |
 | `Dockerfile` / `fly.toml` / `deploy/` | 可部署端点配置 |
+| `deploy/workers/` | Cloudflare Workers/Web Standard MCP 部署入口 |
 | `plugin/` | 便携式插件包、图标和审核用例 |
 | `site/` | GitHub Pages 产品、支持、隐私与条款页面 |
 | `docs/SUBMISSION.md` | 官方上架要求、完成项与外部阻塞项 |

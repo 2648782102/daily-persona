@@ -11,6 +11,16 @@ Ed25519 signing proves that catalog bytes were produced by a holder of the match
 - an organization-managed configuration repository;
 - an operator-published key transparency log.
 
+For Git tags, prefer SSH signing with a key registered in the GitHub account used to publish the repository. A verifier pins the signer identity separately in an `allowed_signers` file and runs:
+
+```bash
+git -c gpg.format=ssh \
+  -c gpg.ssh.allowedSignersFile=/path/to/allowed_signers \
+  tag -v v0.3.0
+```
+
+`scripts/sign-tag.mjs` prints the exact verification shape from a public key path and checks whether a tag already verifies; it deliberately does not create, delete, or force-update tags. Do not treat an unsigned tag as a trust anchor merely because the Git commit hash matches.
+
 Do not bootstrap trust from `/v1/signature.json` alone. That endpoint is useful for auditing, but a compromised server could return both catalog bytes and a matching public key.
 
 ## Key file

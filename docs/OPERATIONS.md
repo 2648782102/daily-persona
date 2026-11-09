@@ -31,6 +31,27 @@ DAILY_PERSONA_RATE_LIMIT=120
 
 Deploy the catalog, signature, and trusted-key ring together. Publish `catalog/trusted-keys.json` through an out-of-band channel; do not ask clients to bootstrap trust from `/v1/signature.json` alone. See `docs/KEY-TRUST.md`.
 
+### Cloudflare Workers option
+
+`deploy/workers/` contains a Web Standard Streamable HTTP implementation using the official MCP SDK. It is designed for a free-tier Worker with no container runtime. The generated `deploy/workers/embedded-catalog.js` embeds the canonical catalog bytes, signature, and public-key ring from the repository; `npm run workers:build` regenerates it and `npm run workers:check` verifies byte equality plus local HTTP/MCP behavior.
+
+Repository secrets and variables for the `Deploy Workers` workflow:
+
+```text
+CLOUDFLARE_API_TOKEN           Workers deploy permission
+CLOUDFLARE_ACCOUNT_ID         Cloudflare account id
+DAILY_PERSONA_WORKER_HOST      repository variable, deployed hostname without https://
+```
+
+After the OpenAI Platform exposes its exact domain challenge, set a Worker secret:
+
+```bash
+cd deploy/workers
+npx wrangler secret put DAILY_PERSONA_CHALLENGE_TOKEN
+```
+
+Trigger `Deploy Workers` with `workflow_dispatch`. It installs the Worker's locked dependencies, regenerates and validates the embedded catalog, runs a Wrangler dry bundle, and then deploys only when the two Cloudflare secrets are present. This is a deployment path, not evidence that a Worker has been deployed or domain-verified.
+
 ## External acceptance
 
 From a machine outside the hosting network:

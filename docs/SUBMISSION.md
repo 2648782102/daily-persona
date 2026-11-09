@@ -38,7 +38,7 @@ Run `npm run readiness` for the machine-readable status and `npm run package:che
 | Key rotation procedure and drill | `docs/KEY-TRUST.md`, `scripts/rotation-drill.mjs` | Out-of-band distribution still requires an operator channel. |
 | CI and dependency audit | `.github/workflows/ci.yml`, GitHub Actions run `42663629663`, `npm audit --audit-level=low` | Passed on Node 20/22/24; CI success is not deployment or directory approval. |
 | Real local Codex host trace | `evals/host-report.json`, `evals/host-rubric.json`, ignored raw traces in `evals/artifacts/` | A 6/6 `codex exec --json` run used an ephemeral stdio MCP override and a derived trace rubric. This covers local Codex CLI only, not ChatGPT plugin behavior or a public HTTPS endpoint. |
-| Deployment and review runbook | `docs/OPERATIONS.md` | Runbook is authored; the public host, monitoring, incident owner, and demo recording still require an operator. |
+| Deployment and review runbook | `docs/OPERATIONS.md`, `deploy/workers/`, `.github/workflows/deploy-workers.yml` | Runbook, Workers source, local Worker tests, locked dependencies, Wrangler dry bundle, and a secret-gated deploy workflow exist; the public host, monitoring, incident owner, and demo recording still require an operator. |
 
 ## External blockers
 

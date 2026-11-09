@@ -1,0 +1,14 @@
+name = "daily-persona"
+main = "src/server.js"
+compatibility_date = "2026-11-09"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[vars]
+DAILY_PERSONA_ALLOWED_ORIGINS = ""
+
+# Set DAILY_PERSONA_CHALLENGE_TOKEN as a Worker secret after the OpenAI
+# Platform domain challenge is available:
+# npx wrangler secret put DAILY_PERSONA_CHALLENGE_TOKEN --config deploy/workers/wrangler.toml

@@ -61,6 +61,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - npm package entrypoints for the CLI, HTTP server, and SDK MCP stdio server, plus an npm package-content check.
 - A public-endpoint smoke script for external HTTPS health, challenge, MCP initialize, tool annotations, and tool-call verification.
 - `docs/OPERATIONS.md` with ownership prerequisites, deployment checklist, external acceptance, monitoring, rollback, evidence binder, and a reviewer demo script.
+- A Cloudflare Workers/Web Standard Streamable HTTP deployment path with generated signed-catalog embedding, Worker HTTP/MCP tests, locked Wrangler dependencies, a dry bundle, and a secret-gated deploy workflow.
 
 ### Changed
 
@@ -68,7 +69,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Production responses add conservative security headers, optional HSTS, and a simple per-client rate limit.
 - `loadSignedCatalog()` exposes canonical catalog bytes for rotation tests.
 - Dockerfile installs locked production dependencies with `npm ci`; CI installs dependencies and audits them on Node 20, 22, and 24.
-- CI also validates plugin and npm package contents and grades the local host rubric; the npm tarball excludes submission-only assets, docs, site sources, and tests.
+- CI also validates plugin and npm package contents, the Worker deployment source, and the local host rubric; the npm tarball excludes submission-only assets, docs, site sources, and tests.
 
 ### Limitations
 

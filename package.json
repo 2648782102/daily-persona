@@ -21,7 +21,9 @@
     "host:rubric": "node scripts/grade-host-report.mjs",
     "smoke:live": "node scripts/smoke-live-endpoint.mjs",
     "rotation:drill": "node scripts/rotation-drill.mjs",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "workers:build": "node scripts/build-workers.mjs",
+    "workers:check": "node scripts/check-workers.mjs && node --test test/workers.test.js"
   },
   "engines": {
     "node": ">=20"

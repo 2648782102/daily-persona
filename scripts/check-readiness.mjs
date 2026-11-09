@@ -76,7 +76,7 @@ const checks = [
   {
     id: 'deployment-operations',
     status: 'blocked',
-    evidence: 'Stable host ownership, TLS, logs, availability monitoring, incident contact, and key-rotation runbook are not deployed',
+    evidence: 'Stable host ownership, TLS, logs, availability monitoring, incident contact, and an out-of-band key channel are not deployed; the runbook and Workers deploy workflow are ready',
   },
   {
     id: 'demo-recording-url',

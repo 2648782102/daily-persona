@@ -51,6 +51,10 @@ fly deploy
 
 Then configure Codex with `https://<your-app>.fly.dev/mcp`. This repository does **not** deploy infrastructure and does not claim a hosted endpoint is live. Flight credentials, DNS, TLS, and app ownership remain the operator's responsibility.
 
+## Cloudflare Workers
+
+`deploy/workers/` provides a Web Standard Streamable HTTP MCP Worker with a free-tier-compatible deployment definition. Run `npm run workers:build` and `npm run workers:check` locally, then see `docs/OPERATIONS.md` for the `Deploy Workers` workflow, required secrets, and domain-challenge token. The Worker source passes local HTTP/MCP tests and a Wrangler dry bundle; no public Worker is deployed by this repository.
+
 ## Reverse proxy and TLS
 
 For any other host, terminate TLS at a reverse proxy and forward `/mcp`, `/health`, and `/v1/*` to the container. Set `DAILY_PERSONA_ALLOWED_ORIGINS` if browser clients send an `Origin` header. If the proxy or host adds bearer-token authentication, configure it at the proxy or through the MCP host's header/bearer settings; this reference server does not store secrets.
